@@ -1,2 +1,4 @@
 rootProject.name='hellojenkins'
 include ':app'
+include ':my_android_lib'
+include ':mvn_private_repo'

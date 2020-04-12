@@ -1,0 +1,67 @@
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+configurations {
+    deployerJars
+}
+
+repositories {
+    mavenCentral()
+}
+
+// 判断版本是Release or Snapshots
+def isReleaseBuild() {
+    return !VERSION.contains("SNAPSHOT");
+}
+
+// 获取仓库url
+def getRepositoryUrl() {
+    return isReleaseBuild() ? RELEASE_URL : SNAPSHOT_URL;
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment {
+                MavenDeployment deployment -> signing.signPom(deployment)
+            }
+
+            pom.version = VERSION
+            pom.artifactId = ARTIFACT_ID
+            pom.groupId = GROUP
+
+            repository(url: getRepositoryUrl()) {
+                authentication(userName: NAME, password: PASSWORD) // maven授权信息
+            }
+        }
+    }
+}
+
+// 进行数字签名
+signing {
+    // 当 发布版本 & 存在"uploadArchives"任务时，才执行
+    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+//############################################################
+//apply plugin: 'maven' //maven仓库插件
+//uploadArchives {
+//    configuration = configurations.archives
+//    repositories {
+//        mavenDeployer {
+//            //Copy复制仓库路径
+//            repository(url: 'http://127.0.0.1:8081/repository/android_lib/') {
+//                //你Nexus的账户密码
+//                authentication(userName: 'cuncaojin', password: 'root')
+//            }
+//            pom.project {
+//                version '1.0.1'
+//                artifactId 'PrintHello'
+//                groupId 'com.demon'
+//                packaging 'aar'
+//                description 'PrintHello dependences lib'
+//            }
+//        }
+//    }
+//}
